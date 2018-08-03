@@ -2,7 +2,17 @@
 
 用 php 实现的一套类似 go 风格的 web 框架，目标是达到类似 go 的开发体验与性能指标
 
+## 使用要求
+
+php >= 7.1
+
 ## 如何使用
+
+```bash
+composer install
+```
+
+安装对应的依赖
 
 ```bash
 php main.php

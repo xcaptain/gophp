@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types = 1);
 require_once './vendor/autoload.php';
 
 use Amp\Http\Server\RequestHandler\CallableRequestHandler;
@@ -8,7 +9,6 @@ use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 use Amp\Http\Status;
 use Amp\Socket;
-// use Psr\Log\NullLogger;
 
 // route part
 use Symfony\Component\Routing\Matcher\UrlMatcher;
@@ -43,7 +43,9 @@ Amp\Loop::run(function () {
             $params = $matcher->match($request->getUri()->getPath());
             return $params['handler']($request);
         } catch (ResourceNotFoundException $e) {
-            return new Response(404, ['content-type" => "text/plain; charset=utf-8'], '404 not found');
+            return new Response(Status::NOT_FOUND, ['content-type" => "text/plain; charset=utf-8'], '404 not found');
+        } catch (\Exception $e) {
+            return new Response(Status::INTERNAL_SERVER_ERROR, [], '500 internal error');
         }
     }), $logger);
 
@@ -57,6 +59,6 @@ Amp\Loop::run(function () {
     });
 });
 
-function fooHandler(Request $request) {
-    return new Response(200, ['content-type" => "text/plain; charset=utf-8'], 'foo handler');
+function fooHandler(Request $request): Response {
+    return new Response(Status::OK, ['content-type" => "text/plain; charset=utf-8'], 'foo handler');
 }
