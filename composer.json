@@ -1,7 +1,14 @@
 {
+    "name": "xcaptain/gophp",
+    "description": "a go like php framework",
     "require": {
         "amphp/http-server": "^0.8.2",
         "symfony/routing": "^4.1",
         "monolog/monolog": "^1.23"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
     }
 }

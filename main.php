@@ -13,8 +13,6 @@ use Amp\Socket;
 // route part
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
-use Symfony\Component\Routing\RouteCollection;
-use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 
 // log part
@@ -32,18 +30,22 @@ Amp\Loop::run(function () {
     $logger = new Logger('app');
     $logger->pushHandler(new StreamHandler('app.log', Logger::DEBUG));
 
-    $route = new Route('/foo', array('handler' => 'fooHandler'));
-    $routes = new RouteCollection();
-    $routes->add('route_name', $route);
+    $routes = require_once 'router.php';
     $context = new RequestContext('/');
     $matcher = new UrlMatcher($routes, $context);
     
     $server = new Server($sockets, new CallableRequestHandler(function (Request $request) use ($matcher, $logger) {
         try {
             $params = $matcher->match($request->getUri()->getPath());
-            return $params['handler']($request);
+            if (!empty($params['_controller'])) {
+                $controller = new $params['_controller'][0]($request);
+                $method = $params['_controller'][1];
+                return call_user_func([$controller, $method]);
+            } elseif (!empty($params['_handler'])) {
+                return $params['handler']($request);
+            }
         } catch (ResourceNotFoundException $e) {
-            return new Response(Status::NOT_FOUND, ['content-type" => "text/plain; charset=utf-8'], '404 not found');
+            return new Response(Status::NOT_FOUND, ['content-type' => 'text/plain; charset=utf-8'], '404 not found');
         } catch (\Exception $e) {
             return new Response(Status::INTERNAL_SERVER_ERROR, [], '500 internal error');
         }
@@ -60,5 +62,5 @@ Amp\Loop::run(function () {
 });
 
 function fooHandler(Request $request): Response {
-    return new Response(Status::OK, ['content-type" => "text/plain; charset=utf-8'], 'foo handler');
+    return new Response(Status::OK, ['content-type' => 'text/plain; charset=utf-8'], 'foo handler');
 }
